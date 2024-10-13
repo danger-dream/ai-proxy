@@ -1,6 +1,7 @@
 const http = require('http');
 const url = require('url');
 const openaiProxy = require('./openai-proxy');
+const claudeProxy = require('./claude-proxy');
 
 const config = require('./config');
 const RateLimiter = require('./rateLimit');

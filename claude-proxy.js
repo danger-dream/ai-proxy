@@ -2,7 +2,7 @@ const https = require('https')
 const url = require('url')
 
 const config = require('./config');
-const { logger, writeLog, sendResponse } = require('./utils');
+const { logger, sendResponse } = require('./utils');
 
 const CLAUDE_API_HOST = config.CLAUDE_API_HOST;
 const ALLOWED_HEADERS = ['x-api-key', 'anthropic-version', 'anthropic-beta', 'content-type'];
