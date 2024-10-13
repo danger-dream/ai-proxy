@@ -8,7 +8,7 @@ const openaiProxy = require('./openai-proxy');
 const config = require('./config');
 const RateLimiter = require('./rateLimit');
 const ipManager = require('./ipManager');
-const { writeLog, sendResponse, logger } = require('./utils');
+const { sendResponse, logger } = require('./utils');
 
 const PROXY_PORT = config.PROXY_PORT;
 
@@ -21,12 +21,6 @@ const CORS_HEADERS = {
 
 // 创建速率限制器
 const rateLimiter = new RateLimiter(config.RATE_LIMIT.REQUESTS, config.RATE_LIMIT.INTERVAL);
-
-// 确保message目录存在
-const MESSAGE_DIR = path.join(__dirname, 'message');
-if (!fs.existsSync(MESSAGE_DIR)) {
-    fs.mkdirSync(MESSAGE_DIR);
-}
 
 // 每小时清理一次 IP 错误计数器
 setInterval(() => ipManager.cleanupIPErrorCounter(), 60 * 60 * 1000);
@@ -62,18 +56,10 @@ const server = http.createServer((req, res) => {
     // 根据 host 选择适当的代理
     const hostname = parsedUrl.hostname;
     if (hostname) {
-        const proxyContext = { 
-            logger, 
-            recordIPError: ipManager.recordIPError.bind(ipManager), 
-            writeLog, 
-            sendResponse,
-            MESSAGE_DIR
-        };
-
         if (hostname.startsWith('claude.api.')) {
-            claudeProxy.handleRequest(req, res, proxyContext);
+            claudeProxy.handleRequest(req, res, ipManager.recordIPError.bind(ipManager));
         } else if (hostname.startsWith('openai.api.')) {
-            openaiProxy.handleRequest(req, res, proxyContext);
+            openaiProxy.handleRequest(req, res, ipManager.recordIPError.bind(ipManager));
         } else {
             sendResponse(res, 404, { error: '不支持的API' });
         }
