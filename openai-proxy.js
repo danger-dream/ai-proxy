@@ -3,17 +3,17 @@ const url = require('url')
 const WebSocket = require('ws')
 const formidable = require('formidable')
 
-const config = require('./config');
-const { logger, sendResponse, writeLog } = require('./utils');
-const fs = require('fs');
+const config = require('./config')
+const { logger, sendResponse, writeLog, getRequestIp } = require('./utils')
+const fs = require('fs')
 
-const OPENAI_API_HOST = config.OPENAI_API_HOST;
-const ALLOWED_HEADERS = ['authorization', 'content-type', 'openai-beta'];
+const OPENAI_API_HOST = config.OPENAI_API_HOST
+const ALLOWED_HEADERS = ['authorization', 'content-type', 'openai-beta']
 
 function handleRequest(req, res, recordIPError) {
-	const startTime = Date.now();
-	const parsedUrl = url.parse(req.url || '');
-	const sourceIP = req.socket.remoteAddress;
+	const startTime = Date.now()
+	const parsedUrl = url.parse(req.url || '')
+	const sourceIP = getRequestIp(req)
 
 	// 初始化日志对象
 	const logData = {
@@ -89,7 +89,7 @@ function handleRequest(req, res, recordIPError) {
 			res.writeHead(openaiRes.statusCode || 500, openaiRes.headers)
 
 			let responseBody = ''
-			const isStreamResponse = openaiRes.headers['content-type'] === 'text/event-stream'
+			const isStreamResponse = openaiRes.headers['content-type']?.includes('text/event-stream')
 
 			openaiRes.on('data', chunk => {
 				responseBody += chunk
@@ -112,9 +112,7 @@ function handleRequest(req, res, recordIPError) {
 									logData.inputTokens = data.usage.prompt_tokens
 									logData.outputTokens = data.usage.completion_tokens
 								}
-							} catch (e) {
-								// 忽略解析错误
-							}
+							} catch {}
 						}
 					})
 				}
@@ -136,9 +134,7 @@ function handleRequest(req, res, recordIPError) {
 							logData.inputTokens = jsonResponse.usage.prompt_tokens
 							logData.outputTokens = jsonResponse.usage.completion_tokens
 						}
-					} catch (e) {
-						logger.error('解析响应时发生错误:', e)
-					}
+					} catch {}
 				}
 
 				writeLog(JSON.stringify(logData))

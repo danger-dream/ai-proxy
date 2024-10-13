@@ -1,13 +1,13 @@
 const https = require('https')
 const url = require('url')
 
-const config = require('./config');
-const { logger, sendResponse, writeLog } = require('./utils');
+const config = require('./config')
+const { logger, sendResponse, writeLog, getRequestIp } = require('./utils')
 
-const CLAUDE_API_HOST = config.CLAUDE_API_HOST;
-const ALLOWED_HEADERS = ['x-api-key', 'anthropic-version', 'anthropic-beta', 'content-type'];
-const SUPPORTED_PATH = '/v1/messages';
-const PATH_REQUIRING_BETA = '/v1/messages/batches';
+const CLAUDE_API_HOST = config.CLAUDE_API_HOST
+const ALLOWED_HEADERS = ['x-api-key', 'anthropic-version', 'anthropic-beta', 'content-type']
+const SUPPORTED_PATH = '/v1/messages'
+const PATH_REQUIRING_BETA = '/v1/messages/batches'
 
 function parseEventStream(chunk) {
 	try {
@@ -22,13 +22,14 @@ function parseEventStream(chunk) {
 							data: JSON.parse(eventData.replace('data: ', ''))
 						}
 					} catch (e) {
-						console.error('解析事件数据时发生错误:', e)
-						return null
+						logger.error('解析事件数据时发生错误:', e)
 					}
+				}
+				return null
 			})
 			.filter(Boolean)
 	} catch (error) {
-		console.error('解析事件流时发生错误:', error)
+		logger.error('解析事件流时发生错误:', error)
 		return []
 	}
 }
@@ -38,9 +39,9 @@ function safelyGetNestedValue(obj, path) {
 }
 
 function handleRequest(req, res, recordIPError) {
-	const startTime = Date.now();
-	const parsedUrl = url.parse(req.url || '');
-	const sourceIP = req.socket.remoteAddress;
+	const startTime = Date.now()
+	const parsedUrl = url.parse(req.url || '')
+	const sourceIP = getRequestIp(req)
 
 	// 初始化日志对象
 	const logData = {
