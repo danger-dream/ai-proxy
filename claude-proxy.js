@@ -157,7 +157,7 @@ function handleRequest(req, res, recordIPError) {
 					}
 				}
 
-				writeLog(logData)
+				logger.log(JSON.stringify(logData))
 			})
 		})
 

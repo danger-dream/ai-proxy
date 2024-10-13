@@ -5,6 +5,7 @@ const formidable = require('formidable')
 
 const config = require('./config');
 const { logger, sendResponse } = require('./utils');
+const fs = require('fs');
 
 const OPENAI_API_HOST = config.OPENAI_API_HOST;
 const ALLOWED_HEADERS = ['authorization', 'content-type', 'openai-beta'];
