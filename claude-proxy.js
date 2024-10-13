@@ -1,7 +1,8 @@
 const https = require('https')
 const url = require('url')
 
-const CLAUDE_API_HOST = 'api.anthropic.com'
+const config = require('./config')
+const CLAUDE_API_HOST = config.CLAUDE_API_HOST
 const ALLOWED_HEADERS = ['x-api-key', 'anthropic-version', 'anthropic-beta', 'content-type']
 const SUPPORTED_PATH = '/v1/messages'
 const PATH_REQUIRING_BETA = '/v1/messages/batches'

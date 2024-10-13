@@ -4,7 +4,8 @@ const WebSocket = require('ws')
 const formidable = require('formidable')
 const fs = require('fs')
 
-const OPENAI_API_HOST = 'api.openai.com'
+const config = require('./config')
+const OPENAI_API_HOST = config.OPENAI_API_HOST
 const ALLOWED_HEADERS = ['authorization', 'content-type', 'openai-beta']
 
 function handleRequest(req, res, { logger, recordIPError, writeLog, sendResponse }) {
