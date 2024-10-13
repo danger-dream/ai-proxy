@@ -177,7 +177,13 @@ function handleWebSocket(req, socket, logger) {
 
 	wsClient.on('message', data => {
 		logger.log('收到WebSocket消息')
-		socket.write(data)
+		try {
+			socket.write(data)
+		} catch (error) {
+			logger.error('处理WebSocket消息时发生错误:', error)
+			wsClient.close()
+			socket.end()
+		}
 	})
 
 	wsClient.on('close', (code, reason) => {
@@ -275,6 +281,11 @@ function handleFileUpload(req, res, logger, writeLog, sendResponse) {
 					if (processedFiles === fileFields.length) {
 						openaiReq.end(`--${boundary}--\r\n`)
 					}
+				})
+				fileStream.on('error', error => {
+					logger.error('读取文件流时发生错误:', error)
+					sendResponse(res, 500, { error: '文件上传失败' })
+					openaiReq.destroy()
 				})
 			}
 		}
