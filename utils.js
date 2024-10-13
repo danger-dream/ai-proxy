@@ -26,7 +26,29 @@ function sendResponse(res, statusCode, content) {
     }
 }
 
+function generateLogFileName() {
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = String(now.getMonth() + 1).padStart(2, '0')
+    const day = String(now.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}.log`
+}
+
+function writeLog(logData) {
+    const logFileName = generateLogFileName()
+    const logFilePath = path.join(__dirname, 'logs', logFileName)
+    const logEntry = JSON.stringify(logData) + '\n'
+
+    fs.appendFile(logFilePath, logEntry, (err) => {
+        if (err) {
+            logger.error('写入日志文件时发生错误:', err)
+        }
+    })
+}
+
 module.exports = {
     logger,
-    sendResponse
+    sendResponse,
+    writeLog,
+    generateLogFileName
 }

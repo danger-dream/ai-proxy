@@ -2,7 +2,7 @@ const https = require('https')
 const url = require('url')
 
 const config = require('./config');
-const { logger, sendResponse } = require('./utils');
+const { logger, sendResponse, writeLog } = require('./utils');
 
 const CLAUDE_API_HOST = config.CLAUDE_API_HOST;
 const ALLOWED_HEADERS = ['x-api-key', 'anthropic-version', 'anthropic-beta', 'content-type'];
@@ -168,7 +168,7 @@ function handleRequest(req, res, recordIPError) {
 			// 在错误情况下也记录日志
 			logData.totalTime = Date.now() - startTime
 			logData.error = error.message
-			writeLog(logData)
+			writeLog(JSON.stringify(logData))
 		})
 
 		if (req.method !== 'GET' && req.method !== 'HEAD') {
