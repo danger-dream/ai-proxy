@@ -4,7 +4,7 @@ const WebSocket = require('ws')
 const formidable = require('formidable')
 
 const config = require('./config');
-const { logger, sendResponse } = require('./utils');
+const { logger, sendResponse, writeLog } = require('./utils');
 const fs = require('fs');
 
 const OPENAI_API_HOST = config.OPENAI_API_HOST;
@@ -141,7 +141,7 @@ function handleRequest(req, res, recordIPError) {
 					}
 				}
 
-				writeLog(logData)
+				writeLog(JSON.stringify(logData))
 			})
 		})
 
@@ -152,7 +152,7 @@ function handleRequest(req, res, recordIPError) {
 			// 在错误情况下也记录日志
 			logData.totalTime = Date.now() - startTime
 			logData.error = error.message
-			writeLog(logData)
+			writeLog(JSON.stringify(logData))
 		})
 
 		if (req.method !== 'GET' && req.method !== 'HEAD') {
