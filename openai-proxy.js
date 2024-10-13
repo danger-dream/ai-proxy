@@ -8,7 +8,8 @@ const config = require('./config')
 const OPENAI_API_HOST = config.OPENAI_API_HOST
 const ALLOWED_HEADERS = ['authorization', 'content-type', 'openai-beta']
 
-function handleRequest(req, res, { logger, recordIPError, writeLog, sendResponse }) {
+function handleRequest(req, res, proxyContext) {
+    const { logger, recordIPError, writeLog, sendResponse, MESSAGE_DIR } = proxyContext;
 	const startTime = Date.now()
 	const parsedUrl = url.parse(req.url || '')
 	const sourceIP = req.socket.remoteAddress

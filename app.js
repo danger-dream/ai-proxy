@@ -1,143 +1,86 @@
-const http = require('http')
-const url = require('url')
-const fs = require('fs')
-const path = require('path')
-const claudeProxy = require('./claude-proxy')
-const openaiProxy = require('./openai-proxy')
+const http = require('http');
+const url = require('url');
+const fs = require('fs');
+const path = require('path');
+const claudeProxy = require('./claude-proxy');
+const openaiProxy = require('./openai-proxy');
 
-const config = require('./config')
-const RateLimiter = require('./rateLimit')
-const { writeLog, sendResponse, logger } = require('./utils')
+const config = require('./config');
+const RateLimiter = require('./rateLimit');
+const ipManager = require('./ipManager');
+const { writeLog, sendResponse, logger } = require('./utils');
 
-const PROXY_PORT = config.PROXY_PORT
+const PROXY_PORT = config.PROXY_PORT;
 
 const CORS_HEADERS = {
-	'Access-Control-Allow-Origin': '*',
-	'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-	'Access-Control-Allow-Headers': 'Content-Type, X-API-Key, Anthropic-Version, Anthropic-Beta, Authorization, OpenAI-Beta',
-	'Access-Control-Max-Age': '86400' // 24小时
-}
-
-// IP 黑名单和错误计数器
-const BLACK_LIST_FILE = path.join(__dirname, 'black.json')
-let ipData = { blacks: new Set(), ip_error_counter: {} }
-const IP_ERROR_THRESHOLD = config.IP_ERROR_THRESHOLD
-const ERROR_WINDOW = config.ERROR_WINDOW
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, X-API-Key, Anthropic-Version, Anthropic-Beta, Authorization, OpenAI-Beta',
+    'Access-Control-Max-Age': '86400' // 24小时
+};
 
 // 创建速率限制器
-const rateLimiter = new RateLimiter(config.RATE_LIMIT.REQUESTS, config.RATE_LIMIT.INTERVAL)
+const rateLimiter = new RateLimiter(config.RATE_LIMIT.REQUESTS, config.RATE_LIMIT.INTERVAL);
 
 // 确保message目录存在
-const MESSAGE_DIR = path.join(__dirname, 'message')
+const MESSAGE_DIR = path.join(__dirname, 'message');
 if (!fs.existsSync(MESSAGE_DIR)) {
-	fs.mkdirSync(MESSAGE_DIR)
-}
-
-// 读取黑名单和错误计数器
-function loadIPData() {
-	try {
-		const data = fs.readFileSync(BLACK_LIST_FILE, 'utf8')
-		const parsedData = JSON.parse(data)
-		ipData.blacks = new Set(parsedData.blacks)
-		ipData.ip_error_counter = parsedData.ip_error_counter
-		logger.log('IP数据已加载')
-	} catch (error) {
-		if (error.code !== 'ENOENT') {
-			logger.error('读取IP数据文件时发生错误:', error)
-		} else {
-			logger.log('IP数据文件不存在，将创建新文件')
-		}
-		ipData = { blacks: new Set(), ip_error_counter: {} }
-	}
-}
-
-// 保存黑名单和错误计数器
-function saveIPData() {
-	const dataToSave = {
-		blacks: Array.from(ipData.blacks),
-		ip_error_counter: ipData.ip_error_counter
-	}
-	fs.writeFile(BLACK_LIST_FILE, JSON.stringify(dataToSave, null, 2), err => {
-		if (err) {
-			logger.error('保存IP数据文件时发生错误:', err)
-		} else {
-			logger.log('IP数据已保存')
-		}
-	})
-}
-
-// 在启动时加载IP数
-loadIPData()
-
-function recordIPError(ip, errorType) {
-	const now = Date.now()
-	if (!ipData.ip_error_counter[ip]) {
-		ipData.ip_error_counter[ip] = { count: 0, firstError: now, lastError: now, errorType }
-	}
-	ipData.ip_error_counter[ip].count++
-	ipData.ip_error_counter[ip].lastError = now
-	ipData.ip_error_counter[ip].errorType = errorType
-
-	if (ipData.ip_error_counter[ip].count >= IP_ERROR_THRESHOLD && now - ipData.ip_error_counter[ip].firstError <= ERROR_WINDOW) {
-		ipData.blacks.add(ip)
-		logger.log(`IP ${ip} 已被加入黑名单`)
-		saveIPData() // 保存更新后的IP数据
-	}
-}
-
-function cleanupIPErrorCounter() {
-	const now = Date.now()
-	let hasChanges = false
-	for (const ip in ipData.ip_error_counter) {
-		if (now - ipData.ip_error_counter[ip].lastError > ERROR_WINDOW) {
-			delete ipData.ip_error_counter[ip]
-			hasChanges = true
-		}
-	}
-	if (hasChanges) {
-		saveIPData() // 如果有变化，保存更新后的IP数据
-	}
+    fs.mkdirSync(MESSAGE_DIR);
 }
 
 // 每小时清理一次 IP 错误计数器
-setInterval(cleanupIPErrorCounter, 60 * 60 * 1000)
+setInterval(() => ipManager.cleanupIPErrorCounter(), 60 * 60 * 1000);
 
 const server = http.createServer((req, res) => {
-	const parsedUrl = url.parse(req.url || '')
-	const sourceIP = req.socket.remoteAddress
+    const parsedUrl = url.parse(req.url || '');
+    const sourceIP = req.socket.remoteAddress;
 
-	// 处理CORS预检请求
-	if (req.method === 'OPTIONS') {
-		res.writeHead(204, CORS_HEADERS)
-		res.end()
-		return
-	}
+    // 处理CORS预检请求
+    if (req.method === 'OPTIONS') {
+        res.writeHead(204, CORS_HEADERS);
+        res.end();
+        return;
+    }
 
-	// 为所有响应添加CORS头
-	Object.keys(CORS_HEADERS).forEach(header => {
-		res.setHeader(header, CORS_HEADERS[header])
-	})
+    // 为所有响应添加CORS头
+    Object.keys(CORS_HEADERS).forEach(header => {
+        res.setHeader(header, CORS_HEADERS[header]);
+    });
 
-	// 检查 IP 是否在黑名单中
-	if (ipData.blacks.has(sourceIP)) {
-		sendResponse(res, 403, { error: 'IP 已被禁止访问' })
-		return
-	}
+    // 检查 IP 是否在黑名单中
+    if (ipManager.isBlacklisted(sourceIP)) {
+        sendResponse(res, 403, { error: 'IP 已被禁止访问' });
+        return;
+    }
 
-	// 根据 host 选择适当的代理
-	const hostname = parsedUrl.hostname
-	if (hostname) {
-		if (hostname.startsWith('claude.api.')) {
-			claudeProxy.handleRequest(req, res, { logger, recordIPError, writeLog, sendResponse })
-		} else if (hostname.startsWith('openai.api.')) {
-			openaiProxy.handleRequest(req, res, { logger, recordIPError, writeLog, sendResponse })
-		} else {
-			sendResponse(res, 404, { error: '不支持的API' })
-		}
-	} else {
-		sendResponse(res, 400, { error: '缺少host头' })
-	}
-})
+    // 检查速率限制
+    if (rateLimiter.isRateLimited(sourceIP)) {
+        sendResponse(res, 429, { error: '请求过于频繁，请稍后再试' });
+        return;
+    }
+
+    // 根据 host 选择适当的代理
+    const hostname = parsedUrl.hostname;
+    if (hostname) {
+        const proxyContext = { 
+            logger, 
+            recordIPError: ipManager.recordIPError.bind(ipManager), 
+            writeLog, 
+            sendResponse,
+            MESSAGE_DIR
+        };
+
+        if (hostname.startsWith('claude.api.')) {
+            claudeProxy.handleRequest(req, res, proxyContext);
+        } else if (hostname.startsWith('openai.api.')) {
+            openaiProxy.handleRequest(req, res, proxyContext);
+        } else {
+            sendResponse(res, 404, { error: '不支持的API' });
+        }
+    } else {
+        sendResponse(res, 400, { error: '缺少host头' });
+    }
+});
 
 server.listen(PROXY_PORT, () => {
 	logger.log(`API代理正在监听端口 ${PROXY_PORT}`)

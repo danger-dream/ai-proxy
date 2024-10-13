@@ -32,7 +32,8 @@ function safelyGetNestedValue(obj, path) {
 	return path.split('.').reduce((acc, part) => acc && acc[part], obj)
 }
 
-function handleRequest(req, res, { logger, recordIPError, writeLog, sendResponse }) {
+function handleRequest(req, res, proxyContext) {
+    const { logger, recordIPError, writeLog, sendResponse, MESSAGE_DIR } = proxyContext;
 	const startTime = Date.now()
 	const parsedUrl = url.parse(req.url || '')
 	const sourceIP = req.socket.remoteAddress
