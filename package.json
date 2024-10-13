@@ -10,3 +10,11 @@
   "author": "",
   "license": "ISC"
 }
+{
+  "scripts": {
+    "test": "mocha test/**/*.test.js"
+  },
+  "devDependencies": {
+    "mocha": "^9.1.3"
+  }
+}

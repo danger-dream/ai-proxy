@@ -6,7 +6,11 @@ const crypto = require('crypto')
 const claudeProxy = require('./claude-proxy')
 const openaiProxy = require('./openai-proxy')
 
-const PROXY_PORT = 6543
+const config = require('./config')
+const RateLimiter = require('./rateLimit')
+const { writeLog, sendResponse } = require('./utils')
+
+const PROXY_PORT = config.PROXY_PORT
 
 const CORS_HEADERS = {
 	'Access-Control-Allow-Origin': '*',
@@ -33,8 +37,11 @@ const logger = {
 // IP 黑名单和错误计数器
 const BLACK_LIST_FILE = path.join(__dirname, 'black.json')
 let ipData = { blacks: new Set(), ip_error_counter: {} }
-const IP_ERROR_THRESHOLD = 10
-const ERROR_WINDOW = 24 * 60 * 60 * 1000 // 1天
+const IP_ERROR_THRESHOLD = config.IP_ERROR_THRESHOLD
+const ERROR_WINDOW = config.ERROR_WINDOW
+
+// 创建速率限制器
+const rateLimiter = new RateLimiter(config.RATE_LIMIT.REQUESTS, config.RATE_LIMIT.INTERVAL)
 
 // 确保message目录存在
 const MESSAGE_DIR = path.join(__dirname, 'message')

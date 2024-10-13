@@ -168,14 +168,17 @@ function handleWebSocket(req, socket, logger) {
 	})
 
 	wsClient.on('open', () => {
+		logger.log('WebSocket连接已打开')
 		socket.write('HTTP/1.1 101 Switching Protocols\r\n' + 'Upgrade: websocket\r\n' + 'Connection: Upgrade\r\n' + '\r\n')
 	})
 
 	wsClient.on('message', data => {
+		logger.log('收到WebSocket消息')
 		socket.write(data)
 	})
 
 	wsClient.on('close', (code, reason) => {
+		logger.log(`WebSocket连接已关闭: 代码 ${code}, 原因: ${reason}`)
 		socket.end()
 	})
 
@@ -185,10 +188,17 @@ function handleWebSocket(req, socket, logger) {
 	})
 
 	socket.on('data', data => {
+		logger.log('发送WebSocket消息')
 		wsClient.send(data)
 	})
 
 	socket.on('end', () => {
+		logger.log('客户端连接已关闭')
+		wsClient.close()
+	})
+
+	socket.on('error', error => {
+		logger.error('客户端socket错误:', error)
 		wsClient.close()
 	})
 }
