@@ -32,6 +32,12 @@ function parseEventStream(chunk) {
 		return []
 	}
 }
+			.filter(Boolean)
+	} catch (error) {
+		console.error('解析事件流时发生错误:', error)
+		return []
+	}
+}
 
 function safelyGetNestedValue(obj, path) {
 	return path.split('.').reduce((acc, part) => acc && acc[part], obj)
