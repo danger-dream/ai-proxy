@@ -16,11 +16,20 @@ function parseEventStream(chunk) {
 			.map(event => {
 				const [eventType, eventData] = event.split('\n')
 				if (eventType && eventData) {
-					return {
-						type: eventType.replace('event: ', ''),
-						data: JSON.parse(eventData.replace('data: ', ''))
+					try {
+						return {
+							type: eventType.replace('event: ', ''),
+							data: JSON.parse(eventData.replace('data: ', ''))
+						}
+					} catch (e) {
+						console.error('解析事件数据时发生错误:', e)
+						return null
 					}
+					claudeReq.destroy()
 				}
+				if (claudeReq.destroyed) {
+					logger.error('请求已销毁，无法写入响应')
+					return
 				return null
 			})
 			.filter(Boolean)
@@ -98,8 +107,13 @@ function handleRequest(req, res, recordIPError) {
 		// 验证消息参数是否为JSON（仅对POST和PUT请求）
 		if ((req.method === 'POST' || req.method === 'PUT') && req.headers['content-type'] === 'application/json') {
 			try {
-				const jsonBody = JSON.parse(requestBody)
-				logData.params = jsonBody
+				if (requestBody) {
+					const jsonBody = JSON.parse(requestBody)
+					logData.params = jsonBody
+				} else {
+					sendResponse(res, 400, { error: '请求体为空' })
+					return
+				}
 			} catch (e) {
 				sendResponse(res, 400, { error: '无效的JSON格式' })
 				return
