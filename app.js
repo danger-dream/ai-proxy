@@ -1,8 +1,5 @@
 const http = require('http');
 const url = require('url');
-const fs = require('fs');
-const path = require('path');
-const claudeProxy = require('./claude-proxy');
 const openaiProxy = require('./openai-proxy');
 
 const config = require('./config');
