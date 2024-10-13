@@ -25,12 +25,6 @@ function parseEventStream(chunk) {
 						console.error('解析事件数据时发生错误:', e)
 						return null
 					}
-					claudeReq.destroy()
-				}
-				if (claudeReq.destroyed) {
-					logger.error('请求已销毁，无法写入响应')
-					return null
-				}
 			})
 			.filter(Boolean)
 	} catch (error) {
