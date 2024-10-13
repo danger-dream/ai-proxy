@@ -29,8 +29,8 @@ function parseEventStream(chunk) {
 				}
 				if (claudeReq.destroyed) {
 					logger.error('请求已销毁，无法写入响应')
-					return
-				return null
+					return null
+				}
 			})
 			.filter(Boolean)
 	} catch (error) {
