@@ -30,9 +30,11 @@ jobs:
         echo "new_version=v$new_version" >> $GITHUB_OUTPUT
     
     - name: Commit version bump
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
         git add .version
         git commit -m "Bump version to ${{ steps.bump_version.outputs.new_version }}"
         git push
