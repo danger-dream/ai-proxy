@@ -4,15 +4,16 @@ const WebSocket = require('ws')
 const formidable = require('formidable')
 const fs = require('fs')
 
-const config = require('./config')
-const OPENAI_API_HOST = config.OPENAI_API_HOST
-const ALLOWED_HEADERS = ['authorization', 'content-type', 'openai-beta']
+const config = require('./config');
+const { logger, writeLog, sendResponse } = require('./utils');
 
-function handleRequest(req, res, proxyContext) {
-    const { logger, recordIPError, writeLog, sendResponse, MESSAGE_DIR } = proxyContext;
-	const startTime = Date.now()
-	const parsedUrl = url.parse(req.url || '')
-	const sourceIP = req.socket.remoteAddress
+const OPENAI_API_HOST = config.OPENAI_API_HOST;
+const ALLOWED_HEADERS = ['authorization', 'content-type', 'openai-beta'];
+
+function handleRequest(req, res, recordIPError) {
+	const startTime = Date.now();
+	const parsedUrl = url.parse(req.url || '');
+	const sourceIP = req.socket.remoteAddress;
 
 	// 初始化日志对象
 	const logData = {

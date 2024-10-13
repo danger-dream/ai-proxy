@@ -1,11 +1,13 @@
 const https = require('https')
 const url = require('url')
 
-const config = require('./config')
-const CLAUDE_API_HOST = config.CLAUDE_API_HOST
-const ALLOWED_HEADERS = ['x-api-key', 'anthropic-version', 'anthropic-beta', 'content-type']
-const SUPPORTED_PATH = '/v1/messages'
-const PATH_REQUIRING_BETA = '/v1/messages/batches'
+const config = require('./config');
+const { logger, writeLog, sendResponse } = require('./utils');
+
+const CLAUDE_API_HOST = config.CLAUDE_API_HOST;
+const ALLOWED_HEADERS = ['x-api-key', 'anthropic-version', 'anthropic-beta', 'content-type'];
+const SUPPORTED_PATH = '/v1/messages';
+const PATH_REQUIRING_BETA = '/v1/messages/batches';
 
 function parseEventStream(chunk) {
 	try {
@@ -32,11 +34,10 @@ function safelyGetNestedValue(obj, path) {
 	return path.split('.').reduce((acc, part) => acc && acc[part], obj)
 }
 
-function handleRequest(req, res, proxyContext) {
-    const { logger, recordIPError, writeLog, sendResponse, MESSAGE_DIR } = proxyContext;
-	const startTime = Date.now()
-	const parsedUrl = url.parse(req.url || '')
-	const sourceIP = req.socket.remoteAddress
+function handleRequest(req, res, recordIPError) {
+	const startTime = Date.now();
+	const parsedUrl = url.parse(req.url || '');
+	const sourceIP = req.socket.remoteAddress;
 
 	// 初始化日志对象
 	const logData = {
