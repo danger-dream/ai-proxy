@@ -82,7 +82,7 @@ function handleRequest(req, res, recordIPError) {
 		const openaiReq = https.request(options, openaiRes => {
 			// 处理文件下载
 			if (openaiRes.headers['content-disposition']) {
-				handleFileDownload(openaiRes, res, logger)
+				handleFileDownload(openaiRes, res)
 				return
 			}
 
@@ -294,7 +294,7 @@ function handleFileUpload(req, res, logger, writeLog, sendResponse) {
 	})
 }
 
-function handleFileDownload(openaiRes, res, logger) {
+function handleFileDownload(openaiRes, res) {
 	res.writeHead(openaiRes.statusCode, openaiRes.headers)
 	openaiRes.pipe(res)
 }

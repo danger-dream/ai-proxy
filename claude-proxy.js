@@ -21,15 +21,12 @@ function parseEventStream(chunk) {
 							type: eventType.replace('event: ', ''),
 							data: JSON.parse(eventData.replace('data: ', ''))
 						}
-					} catch (e) {
-						logger.error('解析事件数据时发生错误:', e)
-					}
+					} catch {}
 				}
 				return null
 			})
 			.filter(Boolean)
-	} catch (error) {
-		logger.error('解析事件流时发生错误:', error)
+	} catch {
 		return []
 	}
 }
@@ -161,9 +158,7 @@ function handleRequest(req, res, recordIPError) {
 							logData.inputTokens = jsonResponse.usage.input_tokens
 							logData.outputTokens = jsonResponse.usage.output_tokens
 						}
-					} catch (e) {
-						logger.error('解析非流式响应时发生错误:', e)
-					}
+					} catch {}
 				}
 
 				logger.log(JSON.stringify(logData))

@@ -48,10 +48,8 @@ const server = http.createServer((req, res) => {
 		sendResponse(res, 429, { error: '请求过于频繁，请稍后再试' })
 		return
 	}
-	openaiProxy.handleRequest(req, res, ipManager.recordIPError.bind(ipManager))
-	return
 	// 根据 host 选择适当的代理
-	/*const hostname = req.headers.host
+	const hostname = req.headers.host
 	if (hostname) {
 		if (hostname.startsWith('claude.api.')) {
 			claudeProxy.handleRequest(req, res, ipManager.recordIPError.bind(ipManager))
@@ -62,7 +60,7 @@ const server = http.createServer((req, res) => {
 		}
 	} else {
 		sendResponse(res, 400, { error: '未识别的 hostname' })
-	}*/
+	}
 })
 
 server.listen(PROXY_PORT, () => {
