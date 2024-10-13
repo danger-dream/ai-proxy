@@ -1,11 +1,10 @@
 const fs = require('fs')
-const path = require('path')
-const { logger } = require('./utils')
 const config = require('./config')
+const { logger } = require('./utils')
 
 class IPManager {
 	constructor() {
-		this.BLACK_LIST_FILE = path.join(process.cwd(), 'black.json')
+		this.BLACK_LIST_FILE = config.BLACK_LIST_PATH
 		this.ipData = { blacks: new Set(), ip_error_counter: {} }
 		this.IP_ERROR_THRESHOLD = config.IP_ERROR_THRESHOLD
 		this.ERROR_WINDOW = config.ERROR_WINDOW

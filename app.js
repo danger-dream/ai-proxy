@@ -13,11 +13,11 @@ const CORS_HEADERS = {
 	'Access-Control-Allow-Origin': '*',
 	'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
 	'Access-Control-Allow-Headers': 'Content-Type, X-API-Key, Anthropic-Version, Anthropic-Beta, Authorization, OpenAI-Beta',
-	'Access-Control-Max-Age': '86400' // 24小时
+	'Access-Control-Max-Age': '86400'
 }
 
 // 创建速率限制器
-const rateLimiter = new RateLimiter(config.RATE_LIMIT.REQUESTS, config.RATE_LIMIT.INTERVAL)
+const rateLimiter = new RateLimiter(config.RATE_LIMIT_REQUESTS, config.RATE_LIMIT_INTERVAL)
 
 // 每小时清理一次 IP 错误计数器
 setInterval(() => ipManager.cleanupIPErrorCounter(), 60 * 60 * 1000)
@@ -65,6 +65,7 @@ const server = http.createServer((req, res) => {
 
 server.listen(PROXY_PORT, () => {
 	logger.log(`API代理正在监听端口 ${PROXY_PORT}`)
+	logger.log(`当前配置: ${JSON.stringify(config, undefined, '\t')}`)
 })
 
 // 错误处理

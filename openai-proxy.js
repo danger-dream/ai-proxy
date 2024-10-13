@@ -1,3 +1,4 @@
+const fs = require('fs')
 const https = require('https')
 const url = require('url')
 const WebSocket = require('ws')
@@ -5,7 +6,6 @@ const formidable = require('formidable')
 
 const config = require('./config')
 const { logger, sendResponse, writeLog, getRequestIp } = require('./utils')
-const fs = require('fs')
 
 const OPENAI_API_HOST = config.OPENAI_API_HOST
 const ALLOWED_HEADERS = ['authorization', 'content-type', 'openai-beta']

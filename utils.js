@@ -1,5 +1,6 @@
 const fs = require('fs')
 const path = require('path')
+const { LOG_PATH } = require('./config')
 
 const logger = {
 	formatDate: () => {
@@ -34,11 +35,10 @@ function generateLogFileName() {
 
 function writeLog(logData) {
 	const logFileName = generateLogFileName()
-	let logFilePath = path.join(process.cwd(), 'logs')
-	if (!fs.existsSync(logFilePath)) {
-		fs.mkdirSync(logFilePath, { recursive: true })
+	if (!fs.existsSync(LOG_PATH)) {
+		fs.mkdirSync(LOG_PATH, { recursive: true })
 	}
-	logFilePath = path.join(logFilePath, logFileName)
+	const logFilePath = path.join(LOG_PATH, logFileName)
 	const logEntry = JSON.stringify(logData) + '\n'
 
 	try {
