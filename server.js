@@ -19,20 +19,6 @@ const CORS_HEADERS = {
 	'Access-Control-Max-Age': '86400' // 24小时
 }
 
-// 使用从 utils.js 导入的 logger
-	formatDate: () => {
-		const offset = 8 * 60 * 60 * 1000 // UTC+8 offset in milliseconds
-		const utc8Date = new Date(new Date().getTime() + offset)
-		return utc8Date.toISOString().replace('T', ' ').slice(0, 19)
-	},
-	log: (...args) => {
-		console.log(`[${logger.formatDate()}] LOG:`, ...args)
-	},
-	error: (...args) => {
-		console.error(`[${logger.formatDate()}] ERROR:`, ...args)
-	}
-}
-
 // IP 黑名单和错误计数器
 const BLACK_LIST_FILE = path.join(__dirname, 'black.json')
 let ipData = { blacks: new Set(), ip_error_counter: {} }
