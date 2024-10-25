@@ -61,6 +61,7 @@ function handleRequest(req, res, recordIPError) {
 	})
 
 	options.headers['host'] = OPENAI_API_HOST
+	options.headers['Connection'] = 'keep-alive'
 
 	let requestBody = ''
 	req.on('data', chunk => {

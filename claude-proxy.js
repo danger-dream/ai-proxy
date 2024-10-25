@@ -89,6 +89,7 @@ function handleRequest(req, res, recordIPError) {
 	})
 
 	options.headers['host'] = CLAUDE_API_HOST
+	options.headers['Connection'] = 'keep-alive'
 
 	let requestBody = ''
 	req.on('data', chunk => {
@@ -113,6 +114,12 @@ function handleRequest(req, res, recordIPError) {
 		}
 
 		const claudeReq = https.request(options, claudeRes => {
+			claudeRes.on('error', error => {
+				logger.error('Claude 响应出错:', error)
+				res.writeHead(500, { 'Content-Type': 'application/json' })
+				res.end(JSON.stringify({ error: '内部服务器错误' }))
+			})
+
 			res.writeHead(claudeRes.statusCode || 500, claudeRes.headers)
 
 			let responseBody = ''
@@ -126,6 +133,7 @@ function handleRequest(req, res, recordIPError) {
 				} catch (error) {
 					logger.error('写入响应时发生错误:', error)
 					claudeReq.destroy()
+					res.end(JSON.stringify({ error: '写入响应时发生错误' }))
 				}
 
 				if (isEventStream) {
@@ -144,6 +152,7 @@ function handleRequest(req, res, recordIPError) {
 
 			claudeRes.on('end', () => {
 				try {
+					logger.log('Claude 响应结束')
 					res.end()
 				} catch (error) {
 					logger.error('结束响应时发生错误:', error)
