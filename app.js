@@ -31,6 +31,7 @@ const server = http.createServer((req, res) => {
 		res.end()
 		return
 	}
+	console.log('URL: ' + req.url + ', METHOD: ' + req.method)
 	const parsedUrl = url.parse(req.url || '')
 	if (parsedUrl.path === '/ping') {
 		sendResponse(res, 200, { pong: Date.now() })
