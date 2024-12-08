@@ -1,7 +1,7 @@
 const http = require('http')
 const openaiProxy = require('./openai-proxy')
 const claudeProxy = require('./claude-proxy')
-
+const url = require('url')
 const config = require('./config')
 const RateLimiter = require('./rateLimit')
 const ipManager = require('./ipManager')
@@ -31,8 +31,8 @@ const server = http.createServer((req, res) => {
 		res.end()
 		return
 	}
-
-	if (req.path === '/ping') {
+	const parsedUrl = url.parse(req.url || '')
+	if (parsedUrl.path === '/ping') {
 		sendResponse(res, 200, { pong: Date.now() })
 		return 
 	}
