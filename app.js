@@ -32,6 +32,11 @@ const server = http.createServer((req, res) => {
 		return
 	}
 
+	if (req.path === '/ping') {
+		sendResponse(res, 200, { pong: Date.now() })
+		return 
+	}
+
 	// 为所有响应添加CORS头
 	Object.keys(CORS_HEADERS).forEach(header => {
 		res.setHeader(header, CORS_HEADERS[header])
